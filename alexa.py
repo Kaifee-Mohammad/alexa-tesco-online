@@ -1,4 +1,5 @@
 import logging
+from tesco import Tesco as ts
 import ask_sdk_core.utils as ask_utils
 
 from ask_sdk_core.skill_builder import SkillBuilder
@@ -30,36 +31,26 @@ class LaunchRequestHandler(AbstractRequestHandler):
                 .response
         )
 
-class FindPriceIntentHandler(AbstractRequestHandler):
-    """Handler for Find Price Intent."""
-    def can_handle(self, handler_input):
-        # type: (HandlerInput) -> bool
-        return ask_utils.is_intent_name("FindPriceIntent")(handler_input)
-
-    def handle(self, handler_input):
-        # type: (HandlerInput) -> Response
-        speak_output = "Price of tomato is 40" 
-
-        return (
-            handler_input.response_builder
-                .speak(speak_output)
-                # .ask("add a reprompt if you want to keep the session open for the user to respond")
-                .response
-        )
-
-class ProductSearchIntentHandler(AbstractRequestHandler):
+class FindProductIntentHandler(AbstractRequestHandler):
     """Handler for searching a product. """
     def can_handle(self, handler_input):
-        return ask_utils.is_intent_name("ProductSearchIntent")(handler_input)
+        return ask_utils.is_intent_name("FindProductIntent")(handler_input)
 
     def handle(self, handler_input):
         # type: (HandlerInput) -> Response
-        speak_output = "Price of tomato is 40" 
+
+        slots = handler_input.request_envelope.request.intent.slots
+
+        product = slots['product'].value
+
+        p = ts.FindProduct(product, 0, 1)
+
+        speak_output = f'Good news, I have found {p["name"]} and it will cost you {p["price"]} pounds.'
 
         return (
             handler_input.response_builder
                 .speak(speak_output)
-                # .ask("add a reprompt if you want to keep the session open for the user to respond")
+                .ask("do you want me to order it for you?")
                 .response
         )
 
@@ -156,8 +147,7 @@ class CatchAllExceptionHandler(AbstractExceptionHandler):
 sb = SkillBuilder()
 
 sb.add_request_handler(LaunchRequestHandler())
-sb.add_request_handler(FindPriceIntentHandler())
-sb.add_request_handler(ProductSearchIntentHandler())
+sb.add_request_handler(FindProductIntentHandler())
 sb.add_request_handler(HelpIntentHandler())
 sb.add_request_handler(CancelOrStopIntentHandler())
 sb.add_request_handler(SessionEndedRequestHandler())
